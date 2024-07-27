@@ -622,10 +622,13 @@ img{
     width: 60%;
 }
 
-.skill_msoffice{
-    width: 90%;
+.skill_js{
+    width: 60%;
 }
 
+.skill_react{
+    width: 50%;
+}
 
 
 @media screen and (min-width : 768px) {

@@ -1,0 +1,162 @@
+/* ==========================================================================
+   DEVANTH — Cinematic Logo Ident
+   Pure CSS · Cinema Grade · High-Performance Canvas Stage
+   ========================================================================== */
+
+:root {
+  --bg-cinema: #020203;
+  --ruby-primary: #e50914;
+  --ruby-glow: rgba(229, 9, 20, 0.4);
+  --crimson-dark: #7a0308;
+  --text-white: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-cinema);
+  font-family: var(--font-display);
+  color: var(--text-white);
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --------------------------------------------------------------------------
+   Cinema Stage & Canvas
+   -------------------------------------------------------------------------- */
+
+#container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-cinema);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#identCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Studio Control Bar (Bottom Floating Dock)
+   -------------------------------------------------------------------------- */
+
+.controls-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(12, 12, 16, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  z-index: 50;
+  opacity: 0.7;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+}
+
+.controls-bar:hover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.control-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.control-btn:hover {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: rgba(229, 9, 20, 0.5);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(229, 9, 20, 0.35);
+}
+
+.control-btn:active {
+  transform: scale(0.96);
+}
+
+.control-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+.control-btn.is-muted {
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.control-hint {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    bottom: 16px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  .control-hint {
+    display: none;
+  }
+}

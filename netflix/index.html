@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEVANTH — Cinematic Logo Ident</title>
+  <meta name="description" content="Cinematic Netflix-style 2019 ident adaptation for DEVANTH brand identity.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=ident3">
+</head>
+<body>
+
+<div id="container">
+  <!-- Dedicated High-Performance 3D Camera & Ribbon Ident Canvas -->
+  <canvas id="identCanvas"></canvas>
+
+  <!-- Studio UI & Audio Controls Overlay -->
+  <div class="controls-bar" id="controlsBar">
+    <button id="replayBtn" class="control-btn replay-btn" aria-label="Replay intro animation">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+      </svg>
+      <span>REPLAY</span>
+    </button>
+
+    <button id="soundToggleBtn" class="control-btn sound-btn" aria-label="Toggle sound">
+      <svg id="soundIcon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+      <span id="soundLabel">SOUND: ON</span>
+    </button>
+
+    <div class="control-hint">Press <kbd>Space</kbd> to replay · <kbd>M</kbd> to mute</div>
+  </div>
+</div>
+
+<script src="script.js?v=ident3"></script>
+</body>
+</html>

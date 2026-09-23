@@ -1,0 +1,186 @@
+/* ==========================================================================
+   DEVANTH — Cinematic Logo Ident (Scoped Overlay CSS)
+   Pure CSS · Cinema Grade · High-Performance Canvas Stage
+   Fully isolated under #devanth-intro to prevent any bleed into portfolio
+   ========================================================================== */
+
+:root {
+  --devanth-bg-cinema: #020203;
+  --devanth-ruby-primary: #e50914;
+  --devanth-ruby-glow: rgba(229, 9, 20, 0.4);
+  --devanth-crimson-dark: #7a0308;
+  --devanth-text-white: #ffffff;
+  --devanth-text-muted: rgba(255, 255, 255, 0.45);
+  --devanth-font-display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --devanth-font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   Intro Container Overlay
+   -------------------------------------------------------------------------- */
+
+#devanth-intro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background-color: var(--devanth-bg-cinema);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.85s;
+}
+
+#devanth-intro.intro-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#devanth-intro.intro-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+#devanth-intro #identContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--devanth-bg-cinema);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#devanth-intro #identCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Studio Control Bar (Bottom Floating Dock)
+   -------------------------------------------------------------------------- */
+
+#devanth-intro .controls-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(12, 12, 16, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  z-index: 50;
+  opacity: 0.75;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+}
+
+#devanth-intro .controls-bar:hover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+#devanth-intro .control-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  font-family: var(--devanth-font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--devanth-text-white);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+#devanth-intro .control-btn:hover {
+  background: rgba(229, 9, 20, 0.25);
+  border-color: rgba(229, 9, 20, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(229, 9, 20, 0.35);
+}
+
+#devanth-intro .control-btn:active {
+  transform: scale(0.96);
+}
+
+#devanth-intro .control-btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+#devanth-intro .control-btn.is-muted {
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+#devanth-intro .control-hint {
+  font-family: var(--devanth-font-ui);
+  font-size: 0.68rem;
+  color: var(--devanth-text-muted);
+  letter-spacing: 0.04em;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+}
+
+#devanth-intro kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--devanth-font-ui);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile & Responsive Adjustments
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  #devanth-intro .controls-bar {
+    bottom: 16px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+  #devanth-intro .control-hint {
+    display: none;
+  }
+  #devanth-intro .control-btn {
+    padding: 5px 11px;
+    font-size: 0.68rem;
+  }
+}

@@ -8,6 +8,15 @@
     <title>Portfolio | Devanth Saravanan</title>
     <!-- Favicon -->
     <link rel="icon" href="images/tint_favicon.svg" type="image/svg+xml">
+    
+    <!-- Intro Google Fonts (Montserrat & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Intro Scoped CSS -->
+    <link rel="stylesheet" href="intro.css">
+
     <!-- Main CSS file -->
     <link rel="stylesheet" href="style.css">
     <link
@@ -16,73 +25,159 @@
   />
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     
-
+    <!-- Critical Anti-Flash Styles: Enforces Pure Black & Prevents Any Flash Before Intro -->
+    <style id="anti-flash-styles">
+        html, body {
+            background-color: #020203 !important;
+            margin: 0;
+            padding: 0;
+        }
+        body:not(.intro-complete) {
+            overflow: hidden !important;
+            height: 100vh !important;
+        }
+        body.intro-complete {
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        #devanth-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999;
+            background-color: #020203;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.85s;
+            overflow: hidden;
+        }
+        #devanth-intro.intro-hidden {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        #portfolio {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #portfolio.portfolio-visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
 </head>
 
 <body>
-    <header id="header">
-        <div class="container">
-            <a href="#home" class="logo" aria-label="TiNT">
-                <svg class="tint_logo_svg" viewBox="0 0 138 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <!-- Blue/Violet Dot Gradient -->
-                        <linearGradient id="tintBlueDot" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#818cf8" />
-                            <stop offset="50%" stop-color="#6366f1" />
-                            <stop offset="100%" stop-color="#4f46e5" />
-                        </linearGradient>
-                        <!-- Orange Dot Gradient -->
-                        <linearGradient id="tintOrangeDot" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#ff8c38" />
-                            <stop offset="50%" stop-color="#f97316" />
-                            <stop offset="100%" stop-color="#ea580c" />
-                        </linearGradient>
-                    </defs>
-                    
-                    <!-- Letter T -->
-                    <path class="tint_glyph" d="M 4 8 H 34 V 15 H 22.5 V 40 H 15.5 V 15 H 4 Z" />
-                    
-                    <!-- Letter i (Stem) -->
-                    <rect class="tint_glyph" x="42" y="17" width="7" height="23" rx="0.8" />
-                    <!-- Letter i (Floating Blue/Violet Dot) -->
-                    <circle class="tint_dot tint_dot_blue" cx="45.5" cy="10.5" r="4.5" fill="url(#tintBlueDot)" />
-                    
-                    <!-- Letter N -->
-                    <path class="tint_glyph" d="M 58 8 H 65 L 83 32.5 V 8 H 90 V 40 H 83 L 65 15.5 V 40 H 58 Z" />
-                    
-                    <!-- Fourth Letter (Asymmetrical T) -->
-                    <path class="tint_glyph" d="M 98 8 H 118 V 40 H 111 V 15 H 98 Z" />
-                    <!-- Floating Orange Dot on Right of T -->
-                    <circle class="tint_dot tint_dot_orange" cx="126.5" cy="12.5" r="4.5" fill="url(#tintOrangeDot)" />
-                </svg>
-            </a>
-            <ul class="menu">
-                <li class="menu_item">
-                    <a href="#home" class="menu_link active-link">Home</a>
-                </li>
-                <li class="menu_item">
-                    <a href="#about" class="menu_link">About</a>
-                </li>
-                <li class="menu_item">
-                    <a href="#skills" class="menu_link">Skills</a>
-                </li>
-                <li class="menu_item">
-                    <a href="#services" class="menu_link">What I Build</a>
-                </li>
-                <li class="menu_item">
-                    <a href="#contact" class="menu_link">Contact to discuss</a>
-                </li>
-                <ion-icon name="close-outline" class="close_icon"></ion-icon>
-            </ul>
-            <ion-icon name="menu-outline" class="toggle_icon"></ion-icon>
-        </div>
-    </header>
+    <!-- =========================================================================
+         DEVANTH — AUTHENTIC NETFLIX-STYLE CINEMATIC INTRO ANIMATION
+         Pure Procedural Canvas 3D & Web Audio Architecture
+         ========================================================================= -->
+    <div id="devanth-intro" class="devanth-intro-layer" aria-label="Devanth Cinematic Intro">
+        <div id="identContainer">
+            <!-- Dedicated High-Performance 3D Camera & Ribbon Ident Canvas -->
+            <canvas id="identCanvas"></canvas>
 
-    <main>
-        <!-- Hero section -->
-        <section class="home" id="home">
-            <div class="hero_container container">
-                <div class="hero_content">
+            <!-- Studio UI & Audio Controls Overlay -->
+            <div class="controls-bar" id="controlsBar">
+                <button id="replayBtn" class="control-btn replay-btn" aria-label="Replay intro animation">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                    <span>REPLAY</span>
+                </button>
+
+                <button id="soundToggleBtn" class="control-btn sound-btn" aria-label="Toggle sound">
+                    <svg id="soundIcon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    <span id="soundLabel">SOUND: ON</span>
+                </button>
+
+                <div class="control-hint">Press <kbd>Space</kbd> to replay · <kbd>M</kbd> to mute</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         MAIN PORTFOLIO APPLICATION (Preserved 100%)
+         ========================================================================= -->
+    <div id="portfolio" class="portfolio-container">
+        <header id="header">
+            <div class="container">
+                <a href="#home" class="logo" aria-label="TiNT">
+                    <svg class="tint_logo_svg" viewBox="0 0 138 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <!-- Blue/Violet Dot Gradient -->
+                            <linearGradient id="tintBlueDot" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#818cf8" />
+                                <stop offset="50%" stop-color="#6366f1" />
+                                <stop offset="100%" stop-color="#4f46e5" />
+                            </linearGradient>
+                            <!-- Orange Dot Gradient -->
+                            <linearGradient id="tintOrangeDot" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ff8c38" />
+                                <stop offset="50%" stop-color="#f97316" />
+                                <stop offset="100%" stop-color="#ea580c" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- Letter T -->
+                        <path class="tint_glyph" d="M 4 8 H 34 V 15 H 22.5 V 40 H 15.5 V 15 H 4 Z" />
+                        
+                        <!-- Letter i (Stem) -->
+                        <rect class="tint_glyph" x="42" y="17" width="7" height="23" rx="0.8" />
+                        <!-- Letter i (Floating Blue/Violet Dot) -->
+                        <circle class="tint_dot tint_dot_blue" cx="45.5" cy="10.5" r="4.5" fill="url(#tintBlueDot)" />
+                        
+                        <!-- Letter N -->
+                        <path class="tint_glyph" d="M 58 8 H 65 L 83 32.5 V 8 H 90 V 40 H 83 L 65 15.5 V 40 H 58 Z" />
+                        
+                        <!-- Fourth Letter (Asymmetrical T) -->
+                        <path class="tint_glyph" d="M 98 8 H 118 V 40 H 111 V 15 H 98 Z" />
+                        <!-- Floating Orange Dot on Right of T -->
+                        <circle class="tint_dot tint_dot_orange" cx="126.5" cy="12.5" r="4.5" fill="url(#tintOrangeDot)" />
+                    </svg>
+                </a>
+                <ul class="menu">
+                    <li class="menu_item">
+                        <a href="#home" class="menu_link active-link">Home</a>
+                    </li>
+                    <li class="menu_item">
+                        <a href="#about" class="menu_link">About</a>
+                    </li>
+                    <li class="menu_item">
+                        <a href="#skills" class="menu_link">Skills</a>
+                    </li>
+                    <li class="menu_item">
+                        <a href="#services" class="menu_link">What I Build</a>
+                    </li>
+                    <li class="menu_item">
+                        <a href="#contact" class="menu_link">Contact to discuss</a>
+                    </li>
+                    <li class="menu_item">
+                        <a href="javascript:void(0)" id="replayIntroLink" class="menu_link replay-nav-link" title="Replay Cinematic Intro">
+                            <i class='bx bx-play-circle' style="vertical-align: middle; margin-right: 4px; font-size: 1.1em;"></i>Intro
+                        </a>
+                    </li>
+                    <ion-icon name="close-outline" class="close_icon"></ion-icon>
+                </ul>
+                <ion-icon name="menu-outline" class="toggle_icon"></ion-icon>
+            </div>
+        </header>
+
+        <main>
+            <!-- Hero section -->
+            <section class="home" id="home">
+                <div class="hero_container container">
+                    <div class="hero_content">
                     <h4 class="hero_greeting">hi there,</h4>
                     <h1 class="hero_name">I'm Devanth Saravanan,</h1>
                     <h2 class="hero_role"><span class="scramble_text" data-typed-items="A Software Engineer..., A Developer..., A Designer..., A Freelancer...">A Software Engineer...</span><span class="scramble_cursor">_</span></h2>
@@ -443,8 +538,12 @@ AOS.init({
 
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
+    </div> <!-- Close #portfolio -->
 
-    <!-- Main script -->
+    <!-- Devanth Cinematic Intro Script (Canvas 3D & Procedural Audio) -->
+    <script src="intro.js"></script>
+
+    <!-- Main Portfolio Script -->
     <script src="main.js"></script>
 </body>
 

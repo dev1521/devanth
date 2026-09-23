@@ -225,7 +225,12 @@ if (contactBtn) {
 
         try {
             // === BACKEND INTEGRATION ===
-            const API_URL = '/api/contact';
+            // Dynamically target localhost:5000 if opened from file:// or other local development servers
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isPort5000 = window.location.port === '5000';
+            const API_URL = (window.location.protocol === 'file:' || (isLocal && !isPort5000))
+                ? 'http://localhost:5000/api/contact'
+                : '/api/contact';
             
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -233,25 +238,29 @@ if (contactBtn) {
                 body: JSON.stringify({ name, email, message })
             });
 
-            if (response.ok) {
-                // Parse the response to ensure success from backend
-                const data = await response.json();
-                if (data.success) {
-                    showToast("Mail sent to Devanth Saravanan.", "success");
-                    // Reset form
-                    nameInput.value = '';
-                    emailInput.value = '';
-                    messageInput.value = '';
-                } else {
-                    throw new Error(data.message || "Backend failed to send");
-                }
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseErr) {
+                data = null;
+            }
+
+            if (response.ok && data && data.success) {
+                showToast(data.message || "Mail sent to Devanth Saravanan.", "success");
+                // Reset form
+                nameInput.value = '';
+                emailInput.value = '';
+                messageInput.value = '';
             } else {
-                throw new Error(`HTTP Error: ${response.status}`);
+                const errorMsg = (data && data.message)
+                    ? data.message
+                    : `Unable to send message (Status: ${response.status}). Please try again.`;
+                showToast(errorMsg, "error");
+                console.error("Contact Form Server Error:", data || `HTTP ${response.status}`);
             }
         } catch (error) {
-            // Shows for backend errors, network errors, etc.
-            showToast("Mail hasn't been sent. Please try again.", "error");
-            console.error("Contact Form Error:", error.message || error);
+            console.error("Contact Form Network Error:", error.message || error);
+            showToast("Network error: Unable to reach contact server. Please ensure backend is running.", "error");
         } finally {
             // Restore button state
             isSending = false;

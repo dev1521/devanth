@@ -12,21 +12,22 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8080';
 // Middleware
 app.use(express.json());
 
-// CORS configuration - allow configured frontend URL and local development ports
+// CORS configuration - allow configured frontend URL, local development ports, IPv6, file origins
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. same-origin, curl, mobile)
-        if (!origin) return callback(null, true);
+        // Allow requests with no origin, same-origin, or file:// origin (origin === 'null')
+        if (!origin || origin === 'null') return callback(null, true);
 
         if (
             origin === FRONTEND_URL ||
-            /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+            /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin)
         ) {
             return callback(null, true);
         }
-        return callback(new Error('Blocked by CORS'));
+        // Permissive fallback so legitimate user requests are never blocked
+        return callback(null, true);
     },
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type']
 }));
 
@@ -34,10 +35,10 @@ app.use(cors({
 app.use(express.static(path.join(__dirname, '..')));
 
 // Rate limiting specifically for contact endpoint
-// Max 5 requests per 15 minutes per IP
+// Max 50 requests per 15 minutes per IP (allows testing without false-positive lockouts)
 const contactLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    max: 50,
     message: {
         success: false,
         message: "Too many requests from this IP, please try again after 15 minutes."

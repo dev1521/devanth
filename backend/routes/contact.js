@@ -2,17 +2,19 @@ const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 
-// Pre-create transporter using environment variables
-// Note: Errors in connection might occur if credentials are wrong, but we catch them per-request or let nodemailer handle it.
-const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.MAIL_PORT || '465', 10),
-    secure: process.env.MAIL_PORT === '465', // true for 465, false for other ports
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD
-    }
-});
+// Helper to create or get transporter
+function getTransporter() {
+    const port = parseInt(process.env.MAIL_PORT || '465', 10);
+    return nodemailer.createTransport({
+        host: process.env.MAIL_HOST || 'smtp.gmail.com',
+        port: port,
+        secure: port === 465,
+        auth: {
+            user: process.env.MAIL_USER,
+            pass: process.env.MAIL_PASSWORD
+        }
+    });
+}
 
 // Helper for basic email validation
 function isValidEmail(email) {
@@ -50,14 +52,14 @@ router.post('/', async (req, res) => {
         // 2. Email Formatting
         const mailOptions = {
             from: `Portfolio Contact Form <${process.env.MAIL_USER}>`,
-            to: process.env.MAIL_TO,
+            to: process.env.MAIL_TO || process.env.MAIL_USER,
             replyTo: email,
             subject: `Portfolio Contact Form — ${name}`,
             text: `New portfolio contact message\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            // You can optionally add html here if needed
         };
 
         // 3. Send Email
+        const transporter = getTransporter();
         await transporter.sendMail(mailOptions);
 
         // 4. Return Success
@@ -71,7 +73,7 @@ router.post('/', async (req, res) => {
         console.error("Email sending failed:", error.message || error);
         return res.status(500).json({
             success: false,
-            message: "Mail hasn't been sent. Please try again."
+            message: error.message || "Mail hasn't been sent. Please try again."
         });
     }
 });

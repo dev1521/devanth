@@ -199,6 +199,15 @@ const messageInput = document.getElementById('contact-message');
 
 let isSending = false;
 
+// Remove red error highlight as soon as the user types
+[nameInput, emailInput, messageInput].forEach(field => {
+    if (field) {
+        field.addEventListener('input', () => {
+            field.classList.remove('input-error');
+        });
+    }
+});
+
 if (contactBtn) {
     contactBtn.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -210,10 +219,38 @@ if (contactBtn) {
         const email = emailInput.value.trim();
         const message = messageInput.value.trim();
 
-        // Basic validation
+        // Clear any previous error styling
+        nameInput.classList.remove('input-error');
+        emailInput.classList.remove('input-error');
+        messageInput.classList.remove('input-error');
+
+        // Detailed field-specific validation with alerts
+        if (!name) {
+            nameInput.classList.add('input-error');
+            nameInput.focus();
+            showToast("Please enter your name.", "error");
+            return;
+        }
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!name || !email || !message || !emailRegex.test(email)) {
-            showToast("Please fill in all required fields correctly. Make sure your email is valid.", "error");
+        if (!email) {
+            emailInput.classList.add('input-error');
+            emailInput.focus();
+            showToast("Please enter your email address.", "error");
+            return;
+        }
+
+        if (!emailRegex.test(email)) {
+            emailInput.classList.add('input-error');
+            emailInput.focus();
+            showToast("Invalid email ID. Please enter a valid email address (e.g. name@gmail.com).", "error");
+            return;
+        }
+
+        if (!message) {
+            messageInput.classList.add('input-error');
+            messageInput.focus();
+            showToast("Please enter your message.", "error");
             return;
         }
 

@@ -1410,7 +1410,12 @@ textarea {
 }
 input:focus,
 textarea:focus {
-    box-shadow: 0 0 5px #8d8d8d;
+    box-shadow: 0 0 8px rgba(204, 12, 234, 0.4);
+}
+input.input-error,
+textarea.input-error {
+    border: 1px solid #ff4757 !important;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.45) !important;
 }
 .contact_content .btn{
     width: 185px;

@@ -52,6 +52,7 @@
       this.isEnabled = localStorage.getItem('devanth_sound_enabled') !== 'false';
       this.activeNodes = [];
       this.timeouts = [];
+      this.audioStartTime = null;
     }
 
     initContext() {
@@ -62,9 +63,6 @@
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.setValueAtTime(this.isEnabled ? 0.9 : 0.0, this.ctx.currentTime);
         this.masterGain.connect(this.ctx.destination);
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => {});
       }
     }
 
@@ -112,28 +110,39 @@
         } catch (e) {}
       });
       this.activeNodes = [];
+      this.audioStartTime = null;
     }
 
     playIntroSequence() {
       this.initContext();
       this.stopAll();
-      if (!this.ctx || !this.isEnabled) return;
-      const t0 = this.ctx.currentTime;
+      if (!this.ctx || !this.isEnabled) {
+        this.audioStartTime = null;
+        return;
+      }
 
-      // 1. Act 1 (0.1s - 0.9s): Subtle deep tonal buildup as D appears
-      this.scheduleTonalBuildup(t0 + 0.1, 0.85);
+      // Only schedule audio if AudioContext is active and running (prevents delayed sound on resume)
+      if (this.ctx.state === 'running') {
+        const t0 = this.ctx.currentTime;
+        this.audioStartTime = t0;
 
-      // 2. Act 2 (0.8s - 1.6s): Rising whoosh & suction as camera accelerates into D
-      this.scheduleRisingWhoosh(t0 + 0.8, 0.8);
+        // 1. Act 1 (0.1s - 0.9s): Subtle deep tonal buildup as D appears
+        this.scheduleTonalBuildup(t0 + 0.1, 0.85);
 
-      // 3. Act 3 (1.5s - 2.2s): Resonant dispersion strike as D explodes into strands
-      this.scheduleDispersionStrike(t0 + 1.5, 0.7);
+        // 2. Act 2 (0.8s - 1.6s): Rising whoosh & suction as camera accelerates into D
+        this.scheduleRisingWhoosh(t0 + 0.8, 0.8);
 
-      // 4. Act 4 (2.1s - 3.3s): Fast airy cinematic ribbon flight rushing past camera
-      this.scheduleAiryFlight(t0 + 2.05, 1.25);
+        // 3. Act 3 (1.5s - 2.2s): Resonant dispersion strike as D explodes into strands
+        this.scheduleDispersionStrike(t0 + 1.5, 0.7);
 
-      // 5. Act 5 (3.6s): Clean low-end resolving impact as DEVANTH emerges
-      this.scheduleResolvingImpact(t0 + 3.65);
+        // 4. Act 4 (2.1s - 3.3s): Fast airy cinematic ribbon flight rushing past camera
+        this.scheduleAiryFlight(t0 + 2.05, 1.25);
+
+        // 5. Act 5 (3.6s): Clean low-end resolving impact as DEVANTH emerges
+        this.scheduleResolvingImpact(t0 + 3.65);
+      } else {
+        this.audioStartTime = null;
+      }
     }
 
     scheduleTonalBuildup(startTime, duration) {
@@ -266,17 +275,6 @@
 
   const audioEngine = new IdentAudioEngine();
   audioEngine.updateUI();
-
-  // One-time window listener to safely resume audio on first user gesture
-  const resumeAudioOnGesture = () => {
-    if (audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
-      audioEngine.ctx.resume().catch(() => {});
-    }
-    window.removeEventListener('pointerdown', resumeAudioOnGesture);
-    window.removeEventListener('keydown', resumeAudioOnGesture);
-  };
-  window.addEventListener('pointerdown', resumeAudioOnGesture);
-  window.addEventListener('keydown', resumeAudioOnGesture);
 
   // =========================================================================
   // 2. 3D RIBBON STRAND GENERATOR & CHOREOGRAPHY
@@ -746,7 +744,16 @@
 
   function runChoreography(timestamp) {
     if (!startTime) startTime = timestamp;
-    const elapsed = (timestamp - startTime) / 1000;
+    
+    // Hardware audio-clock synchronization:
+    // When audio is actively running, lock visual animation to the exact Web Audio sample clock
+    let elapsed;
+    if (audioEngine.ctx && audioEngine.ctx.state === 'running' && audioEngine.audioStartTime !== null) {
+      elapsed = Math.max(0, audioEngine.ctx.currentTime - audioEngine.audioStartTime);
+    } else {
+      elapsed = Math.max(0, (timestamp - startTime) / 1000);
+    }
+
     renderFrame(elapsed);
 
     // Natural intro completion at ~5.2s (after wordmark resolve + sheen + brief majestic hold)
@@ -773,6 +780,20 @@
     animFrameId = requestAnimationFrame(runChoreography);
   }
 
+  // Helper to ensure AudioContext is active and trigger startIdent in 100% audio-visual sync
+  function restartIdentWithAudio() {
+    audioEngine.initContext();
+    if (audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+      audioEngine.ctx.resume().then(() => {
+        startIdent();
+      }).catch(() => {
+        startIdent();
+      });
+    } else {
+      startIdent();
+    }
+  }
+
   // Expose Replay method globally as specified in requirements
   window.replayDevanthIntro = function () {
     const introEl = document.getElementById('devanth-intro');
@@ -792,7 +813,7 @@
     // Scroll to top cleanly without destroying any state
     window.scrollTo({ top: 0, behavior: 'auto' });
 
-    startIdent();
+    restartIdentWithAudio();
   };
 
   // Skip functionality if user triggers it
@@ -815,20 +836,38 @@
     }, 950);
   });
 
-  // Auto-start on initial page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+  // Auto-start on initial page load:
+  // If browser permits autoplay audio, starts with audio; otherwise starts video and syncs on first gesture.
+  function initAutoStart() {
+    audioEngine.initContext();
+    if (audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+      let started = false;
+      const launch = () => {
+        if (!started) {
+          started = true;
+          startIdent();
+        }
+      };
+      // Attempt immediate resume (succeeds if user visited domain before or browser allows it)
+      audioEngine.ctx.resume().then(launch).catch(launch);
+      // Safety timeout: Never delay visual animation if browser blocks autoplay audio
+      setTimeout(launch, 50);
+    } else {
       startIdent();
-    });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAutoStart);
   } else {
-    startIdent();
+    initAutoStart();
   }
 
   // Replay button in intro controls dock
   if (replayBtn) {
     replayBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      startIdent();
+      restartIdentWithAudio();
     });
   }
 
@@ -836,19 +875,43 @@
   if (soundToggleBtn) {
     soundToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      audioEngine.toggleSound();
+      audioEngine.initContext();
+      if (audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+        audioEngine.ctx.resume().then(() => {
+          audioEngine.toggleSound();
+          if (audioEngine.isEnabled && !hasCompleted) {
+            startIdent();
+          }
+        }).catch(() => {
+          audioEngine.toggleSound();
+        });
+      } else {
+        audioEngine.toggleSound();
+        if (audioEngine.isEnabled && !hasCompleted) {
+          startIdent();
+        }
+      }
     });
   }
 
-  // Click on background container during intro replays
+  // Click on background container during intro replays in sync
   if (container) {
     container.addEventListener('click', (e) => {
       if (e.target.closest('#replayBtn') || e.target.closest('#soundToggleBtn')) return;
       if (!hasCompleted) {
-        startIdent();
+        restartIdentWithAudio();
       }
     });
   }
+
+  // Auto-sync audio on first user gesture: If audio was suspended on page load,
+  // the first user interaction cleanly restarts both visual choreography and audio from Act 1 in 100% lockstep.
+  const syncAudioOnFirstGesture = () => {
+    if (!hasCompleted && isRunning && audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+      restartIdentWithAudio();
+    }
+  };
+  window.addEventListener('pointerdown', syncAudioOnFirstGesture, { once: true });
 
   // Keyboard Shortcuts: Space / R to replay, M to toggle sound, Esc to skip
   window.addEventListener('keydown', (e) => {
@@ -857,7 +920,7 @@
     if (isIntroActive) {
       if (e.code === 'Space' || e.key === 'r' || e.key === 'R') {
         e.preventDefault();
-        startIdent();
+        restartIdentWithAudio();
       } else if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         audioEngine.toggleSound();

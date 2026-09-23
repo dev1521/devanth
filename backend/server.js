@@ -60,5 +60,9 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Backend server running on http://localhost:${PORT}`);
+    console.log(`\n=================================================`);
+    console.log(`🚀 Portfolio Server is running!`);
+    console.log(`> Local:       http://localhost:${PORT}`);
+    console.log(`> Contact API: http://localhost:${PORT}/api/contact`);
+    console.log(`=================================================\n`);
 });

@@ -261,43 +261,110 @@ if (contactBtn) {
         contactBtn.style.opacity = "0.7";
 
         try {
-            // === BACKEND INTEGRATION ===
-            // Dynamically target localhost:5000 if opened from file:// or other local development servers
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const isPort5000 = window.location.port === '5000';
-            const API_URL = (window.location.protocol === 'file:' || (isLocal && !isPort5000))
-                ? 'http://localhost:5000/api/contact'
-                : '/api/contact';
-            
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, message })
-            });
+            // === RESILIENT BACKEND INTEGRATION & FALLBACK RESOLVER ===
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname || '';
+            const port = window.location.port || '';
 
-            let data = null;
-            try {
-                data = await response.json();
-            } catch (parseErr) {
-                data = null;
+            const isLoopback = /^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)$/i.test(hostname);
+            const isLan = /^192\.168\.\d+\.\d+$/.test(hostname) ||
+                          /^10\.\d+\.\d+\.\d+$/.test(hostname) ||
+                          /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(hostname) ||
+                          hostname.endsWith('.local');
+            const isLocal = protocol === 'file:' || isLoopback || isLan;
+
+            const candidateEndpoints = [];
+
+            // 1. Explicit global configuration if defined
+            if (window.BACKEND_API) {
+                candidateEndpoints.push(window.BACKEND_API);
             }
 
-            if (response.ok && data && data.success) {
-                showToast(data.message || "Mail sent to Devanth Saravanan.", "success");
-                // Reset form
-                nameInput.value = '';
-                emailInput.value = '';
-                messageInput.value = '';
+            // 2. Local dev vs production candidate priorities
+            if (port === '5000') {
+                // Already running directly on Express backend port
+                candidateEndpoints.push('/api/contact');
+                candidateEndpoints.push('http://localhost:5000/api/contact');
+            } else if (isLocal) {
+                // Running via frontend dev server (e.g., http-server :8080, Live Server :5500, file://)
+                // Prioritize the Express backend running on port 5000
+                if (isLan && hostname) {
+                    candidateEndpoints.push(`http://${hostname}:5000/api/contact`);
+                }
+                candidateEndpoints.push('http://localhost:5000/api/contact');
+                candidateEndpoints.push('http://127.0.0.1:5000/api/contact');
+                if (protocol !== 'file:') {
+                    candidateEndpoints.push('/api/contact');
+                }
             } else {
-                const errorMsg = (data && data.message)
-                    ? data.message
-                    : `Unable to send message (Status: ${response.status}). Please try again.`;
-                showToast(errorMsg, "error");
-                console.error("Contact Form Server Error:", data || `HTTP ${response.status}`);
+                // Production hosting (e.g. Vercel, Netlify, custom domain)
+                candidateEndpoints.push('/api/contact');
+                candidateEndpoints.push('http://localhost:5000/api/contact');
+            }
+
+            const uniqueEndpoints = [...new Set(candidateEndpoints)];
+
+            let delivered = false;
+            let lastStatus = null;
+            let lastErrorMsg = null;
+
+            for (const endpoint of uniqueEndpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, message })
+                    });
+
+                    lastStatus = response.status;
+
+                    // If endpoint returned 404 (endpoint not mapped on this server) or 502/503, try next candidate
+                    if (response.status === 404 || response.status === 502 || response.status === 503) {
+                        console.warn(`Contact endpoint ${endpoint} returned HTTP ${response.status}. Trying next fallback candidate...`);
+                        continue;
+                    }
+
+                    let data = null;
+                    try {
+                        data = await response.json();
+                    } catch (parseErr) {
+                        data = null;
+                    }
+
+                    if (response.ok && data && data.success) {
+                        showToast(data.message || "Mail sent to Devanth Saravanan.", "success");
+                        // Reset form
+                        nameInput.value = '';
+                        emailInput.value = '';
+                        messageInput.value = '';
+                        delivered = true;
+                        break;
+                    } else {
+                        lastErrorMsg = (data && data.message)
+                            ? data.message
+                            : `Server responded with status ${response.status}.`;
+                        console.error("Contact Form Server Error:", data || `HTTP ${response.status}`);
+                        break;
+                    }
+                } catch (netErr) {
+                    // Endpoint unreachable or port not listening, attempt next candidate
+                    console.warn(`Could not reach ${endpoint}:`, netErr.message || netErr);
+                    continue;
+                }
+            }
+
+            if (!delivered) {
+                if (lastErrorMsg) {
+                    showToast(lastErrorMsg, "error");
+                } else if (lastStatus === 404) {
+                    showToast("Contact API not found (Status 404). Please ensure the backend is running by running 'npm start' in the terminal.", "error");
+                } else {
+                    showToast("Unable to reach contact server. Please ensure the backend is running ('npm start').", "error");
+                }
             }
         } catch (error) {
-            console.error("Contact Form Network Error:", error.message || error);
-            showToast("Network error: Unable to reach contact server. Please ensure backend is running.", "error");
+            console.error("Contact Form Unexpected Error:", error.message || error);
+            showToast("Unable to send message. Please ensure the backend is running ('npm start').", "error");
         } finally {
             // Restore button state
             isSending = false;

@@ -1,40 +1,35 @@
-const express = require('express');
-const router = express.Router();
 const nodemailer = require('nodemailer');
 
-// Helper to create or get transporter
-function getTransporter() {
-    const port = parseInt(process.env.MAIL_PORT || '465', 10);
-    return nodemailer.createTransport({
-        host: process.env.MAIL_HOST || 'smtp.gmail.com',
-        port: port,
-        secure: port === 465,
-        auth: {
-            user: process.env.MAIL_USER,
-            pass: process.env.MAIL_PASSWORD
-        }
-    });
-}
-
-// Helper for basic email validation
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-// GET /api/contact - Health check & status verification
-router.get('/', (req, res) => {
-    return res.status(200).json({
-        success: true,
-        message: 'Contact API endpoint is online and ready for POST submissions.'
-    });
-});
+module.exports = async function handler(req, res) {
+    // Enable CORS for serverless
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-router.post('/', async (req, res) => {
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method === 'GET') {
+        return res.status(200).json({
+            success: true,
+            message: 'Contact API endpoint is online and ready for POST submissions.'
+        });
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, message: 'Method not allowed' });
+    }
+
     try {
-        let { name, email, message } = req.body;
+        let { name, email, message } = req.body || {};
 
-        // 1. Validation and Sanitization
         if (!name || typeof name !== 'string') {
             return res.status(400).json({ success: false, message: 'Name is required and must be valid.' });
         }
@@ -57,7 +52,17 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid email address format.' });
         }
 
-        // 2. Email Formatting
+        const port = parseInt(process.env.MAIL_PORT || '465', 10);
+        const transporter = nodemailer.createTransport({
+            host: process.env.MAIL_HOST || 'smtp.gmail.com',
+            port: port,
+            secure: port === 465,
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASSWORD
+            }
+        });
+
         const mailOptions = {
             from: `Portfolio Contact Form <${process.env.MAIL_USER}>`,
             to: process.env.MAIL_TO || process.env.MAIL_USER,
@@ -66,24 +71,17 @@ router.post('/', async (req, res) => {
             text: `New portfolio contact message\n\nName: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
         };
 
-        // 3. Send Email
-        const transporter = getTransporter();
         await transporter.sendMail(mailOptions);
 
-        // 4. Return Success
         return res.status(200).json({
             success: true,
-            message: "Mail sent to Devanth Saravanan."
+            message: 'Mail sent to Devanth Saravanan.'
         });
-
     } catch (error) {
-        // 5. Handle Failure
-        console.error("Email sending failed:", error.message || error);
+        console.error('Contact email error:', error.message || error);
         return res.status(500).json({
             success: false,
             message: error.message || "Mail hasn't been sent. Please try again."
         });
     }
-});
-
-module.exports = router;
+};

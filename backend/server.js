@@ -31,9 +31,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
 }));
 
-// Serve static frontend files (HTML, CSS, JS, images)
-app.use(express.static(path.join(__dirname, '..')));
-
 // Rate limiting specifically for contact endpoint
 // Max 50 requests per 15 minutes per IP (allows testing without false-positive lockouts)
 const contactLimiter = rateLimit({
@@ -47,8 +44,11 @@ const contactLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Apply rate limiter to contact route
+// Apply rate limiter to contact route (placed BEFORE static files to prevent directory collisions)
 app.use('/api/contact', contactLimiter, contactRoute);
+
+// Serve static frontend files (HTML, CSS, JS, images)
+app.use(express.static(path.join(__dirname, '..')));
 
 // Global Error Handler (prevents leaking internal stack traces)
 app.use((err, req, res, next) => {

@@ -282,24 +282,21 @@ if (contactBtn) {
 
             // 2. Local dev vs production candidate priorities
             if (port === '5000') {
-                // Already running directly on Express backend port
+                // Running directly on Express backend port
                 candidateEndpoints.push('/api/contact');
                 candidateEndpoints.push('http://localhost:5000/api/contact');
+                candidateEndpoints.push('http://127.0.0.1:5000/api/contact');
             } else if (isLocal) {
-                // Running via frontend dev server (e.g., http-server :8080, Live Server :5500, file://)
-                // Prioritize the Express backend running on port 5000
+                // Running via static dev server (e.g. Live Server :5500, :8080) or file://
+                // Target the Express backend listening on port 5000 directly
                 if (isLan && hostname) {
                     candidateEndpoints.push(`http://${hostname}:5000/api/contact`);
                 }
                 candidateEndpoints.push('http://localhost:5000/api/contact');
                 candidateEndpoints.push('http://127.0.0.1:5000/api/contact');
-                if (protocol !== 'file:') {
-                    candidateEndpoints.push('/api/contact');
-                }
             } else {
-                // Production hosting (e.g. Vercel, Netlify, custom domain)
+                // Production hosting (e.g. Vercel Serverless Function, custom domain)
                 candidateEndpoints.push('/api/contact');
-                candidateEndpoints.push('http://localhost:5000/api/contact');
             }
 
             const uniqueEndpoints = [...new Set(candidateEndpoints)];
@@ -354,12 +351,28 @@ if (contactBtn) {
             }
 
             if (!delivered) {
+                // Construct mailto link as zero-loss fallback
+                const mailtoSubject = encodeURIComponent(`Portfolio Inquiry from ${name}`);
+                const mailtoBody = encodeURIComponent(`Hi Devanth,\n\n${message}\n\nFrom: ${name} (${email})`);
+                const mailtoUrl = `mailto:devanth017@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
+
                 if (lastErrorMsg) {
                     showToast(lastErrorMsg, "error");
+                } else if (isLocal && port !== '5000') {
+                    showToast("Backend server is not running on port 5000. Launching email client to send directly...", "error");
+                    setTimeout(() => {
+                        window.location.href = mailtoUrl;
+                    }, 1200);
                 } else if (lastStatus === 404) {
-                    showToast("Contact API not found (Status 404). Please ensure the backend is running by running 'npm start' in the terminal.", "error");
+                    showToast("Contact API returned 404. Launching email client to send directly...", "error");
+                    setTimeout(() => {
+                        window.location.href = mailtoUrl;
+                    }, 1200);
                 } else {
-                    showToast("Unable to reach contact server. Please ensure the backend is running ('npm start').", "error");
+                    showToast("Unable to reach contact server. Launching email client to send directly...", "error");
+                    setTimeout(() => {
+                        window.location.href = mailtoUrl;
+                    }, 1200);
                 }
             }
         } catch (error) {

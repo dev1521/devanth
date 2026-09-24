@@ -28,7 +28,15 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-        let { name, email, message } = req.body || {};
+        let body = req.body;
+        if (typeof body === 'string') {
+            try {
+                body = JSON.parse(body);
+            } catch (parseErr) {
+                // Keep body as is
+            }
+        }
+        let { name, email, message } = body || {};
 
         if (!name || typeof name !== 'string') {
             return res.status(400).json({ success: false, message: 'Name is required and must be valid.' });
@@ -50,6 +58,14 @@ module.exports = async function handler(req, res) {
 
         if (!isValidEmail(email)) {
             return res.status(400).json({ success: false, message: 'Invalid email address format.' });
+        }
+
+        if (!process.env.MAIL_USER || !process.env.MAIL_PASSWORD) {
+            console.error('Missing MAIL_USER or MAIL_PASSWORD environment variables.');
+            return res.status(500).json({
+                success: false,
+                message: 'Server mail configuration is incomplete. Please set MAIL_USER and MAIL_PASSWORD in your environment.'
+            });
         }
 
         const port = parseInt(process.env.MAIL_PORT || '465', 10);

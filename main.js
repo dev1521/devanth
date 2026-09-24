@@ -299,6 +299,9 @@ if (contactBtn) {
                 candidateEndpoints.push('/api/contact');
             }
 
+            // Universal high-reliability cloud fallback (handles GitHub Pages, Netlify, static hosts)
+            candidateEndpoints.push('https://formsubmit.co/ajax/devanth017@gmail.com');
+
             const uniqueEndpoints = [...new Set(candidateEndpoints)];
 
             let delivered = false;
@@ -307,10 +310,26 @@ if (contactBtn) {
 
             for (const endpoint of uniqueEndpoints) {
                 try {
+                    const isFormSubmit = endpoint.includes('formsubmit.co');
+                    const payload = isFormSubmit ? {
+                        name,
+                        email,
+                        _replyto: email,
+                        _subject: `Portfolio Contact Form — ${name}`,
+                        message
+                    } : {
+                        name,
+                        email,
+                        message
+                    };
+
                     const response = await fetch(endpoint, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, message })
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
                     });
 
                     lastStatus = response.status;
@@ -328,7 +347,9 @@ if (contactBtn) {
                         data = null;
                     }
 
-                    if (response.ok && data && data.success) {
+                    const isSuccess = response.ok && data && (data.success === true || data.success === 'true');
+
+                    if (isSuccess) {
                         showToast(data.message || "Mail sent to Devanth Saravanan.", "success");
                         // Reset form
                         nameInput.value = '';
@@ -337,11 +358,11 @@ if (contactBtn) {
                         delivered = true;
                         break;
                     } else {
-                        lastErrorMsg = (data && data.message)
-                            ? data.message
-                            : `Server responded with status ${response.status}.`;
-                        console.error("Contact Form Server Error:", data || `HTTP ${response.status}`);
-                        break;
+                        if (data && data.message) {
+                            lastErrorMsg = data.message;
+                        }
+                        console.warn(`Endpoint ${endpoint} did not return success. Trying next fallback...`, data);
+                        continue;
                     }
                 } catch (netErr) {
                     // Endpoint unreachable or port not listening, attempt next candidate
@@ -356,24 +377,10 @@ if (contactBtn) {
                 const mailtoBody = encodeURIComponent(`Hi Devanth,\n\n${message}\n\nFrom: ${name} (${email})`);
                 const mailtoUrl = `mailto:devanth017@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
 
-                if (lastErrorMsg) {
-                    showToast(lastErrorMsg, "error");
-                } else if (isLocal && port !== '5000') {
-                    showToast("Backend server is not running on port 5000. Launching email client to send directly...", "error");
-                    setTimeout(() => {
-                        window.location.href = mailtoUrl;
-                    }, 1200);
-                } else if (lastStatus === 404) {
-                    showToast("Contact API returned 404. Launching email client to send directly...", "error");
-                    setTimeout(() => {
-                        window.location.href = mailtoUrl;
-                    }, 1200);
-                } else {
-                    showToast("Unable to reach contact server. Launching email client to send directly...", "error");
-                    setTimeout(() => {
-                        window.location.href = mailtoUrl;
-                    }, 1200);
-                }
+                showToast("Opening email client to send your message directly...", "info");
+                setTimeout(() => {
+                    window.location.href = mailtoUrl;
+                }, 1000);
             }
         } catch (error) {
             console.error("Contact Form Unexpected Error:", error.message || error);

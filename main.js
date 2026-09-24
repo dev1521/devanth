@@ -295,8 +295,9 @@ if (contactBtn) {
                 candidateEndpoints.push('http://localhost:5000/api/contact');
                 candidateEndpoints.push('http://127.0.0.1:5000/api/contact');
             } else {
-                // Production hosting (e.g. Vercel Serverless Function, custom domain)
+                // Production hosting (Netlify Functions, Vercel Serverless, custom domain)
                 candidateEndpoints.push('/api/contact');
+                candidateEndpoints.push('/.netlify/functions/contact');
             }
 
             // Universal high-reliability cloud fallback (handles GitHub Pages, Netlify, static hosts)
